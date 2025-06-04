@@ -8,6 +8,7 @@ from indexed_bitmap_handler import IndexedBitmapHandler, preprocess_reference_im
 
 # =============================================================================
 # 파일 처리 유틸리티 함수들
+# TODO: 이 섹션은 README 규격에 맞게 폴더 구조 기반으로 전면 수정 필요
 # =============================================================================
 
 def rgb_to_hex(rgb):
@@ -16,7 +17,11 @@ def rgb_to_hex(rgb):
 
 
 def extract_number_from_filename(filename):
-    """파일명에서 숫자 추출"""
+    """파일명에서 숫자 추출
+
+    현재: 001MFront.png → 1
+    TODO: 폴더 구조로 변경시 이 함수는 제거 예정
+    """
     name_without_ext = os.path.splitext(filename)[0]
     match = re.match(r'^(\d+)', name_without_ext)
     if match:
@@ -25,7 +30,11 @@ def extract_number_from_filename(filename):
 
 
 def generate_pokemon_filename(original_filename, suffix=""):
-    """포켓몬 파일명 형식으로 변환: (male/female)_(back/front)_(normal/shiny).png"""
+    """포켓몬 파일명 형식으로 변환: (male/female)_(back/front)_(normal/shiny).png
+
+    현재: 001MFront.png → male_front_normal.png
+    TODO: 폴더 구조 변경시 파일명 규칙도 단순화 가능
+    """
     _, ext = os.path.splitext(original_filename)
     if not ext:
         ext = '.png'
@@ -42,9 +51,12 @@ def generate_pokemon_filename(original_filename, suffix=""):
         return f"{gender}_{back_front}_{shiny_status}{ext}"
 
 
-
 def create_pokemon_folder(output_folder, dex_number):
-    """포켓몬 폴더 생성"""
+    """포켓몬 폴더 생성
+
+    현재: output/pokemon_001/ 형태로 생성
+    TODO: NARC 직접 출력으로 변경시 이 함수는 불필요해짐
+    """
     folder_name = f"pokemon_{dex_number:03d}"
     pokemon_folder = os.path.join(output_folder, folder_name)
 
@@ -56,7 +68,13 @@ def create_pokemon_folder(output_folder, dex_number):
 
 
 def group_files_by_number(image_files):
-    """파일들을 숫자별로 그룹화"""
+    """파일들을 숫자별로 그룹화
+
+    현재: 파일명의 숫자로 그룹화 (001MFront.png, 001FBack.png → 그룹 1)
+    TODO: 폴더 구조 스캔으로 대체
+    - input/M/001/ 과 input/F/001/ 을 하나의 포켓몬으로 묶기
+    - 성별별 처리 로직 추가
+    """
     groups = defaultdict(list)
     shiny_files = defaultdict(list)
 
@@ -75,8 +93,25 @@ def group_files_by_number(image_files):
     return groups, shiny_files
 
 
+# TODO: 새로운 폴더 구조 스캔 함수 추가 필요
+def scan_gender_dex_folders(input_dir):
+    """README 규격의 폴더 구조 스캔
+
+    예상 입력: input/M/001/, input/F/001/
+    예상 출력: {1: {'M': [파일들], 'F': [파일들]}}
+
+    이 함수로 group_files_by_number() 대체 예정
+    """
+    # TODO: 구현 필요
+    pass
+
+
 def save_preprocessed_sprite(image, output_path):
-    """전처리 완료된 이미지를 PNG로 저장"""
+    """전처리 완료된 이미지를 PNG로 저장
+
+    KEEP: 이 함수는 검증용으로 계속 필요할 수 있음
+    TODO: NARC 직접 출력시에도 중간 결과 저장용으로 사용
+    """
     # 최종 검증
     if image.size != (160, 80):
         print(f"    경고: 예상과 다른 크기 {image.size}")
@@ -90,7 +125,10 @@ def save_preprocessed_sprite(image, output_path):
 
 
 def save_original_image(shiny_file, pokemon_folder):
-    """원본 Shiny 이미지를 저장"""
+    """원본 Shiny 이미지를 저장
+
+    KEEP: 디버깅과 검증을 위해 유지
+    """
     original_filename = os.path.basename(shiny_file)
     new_filename = generate_pokemon_filename(original_filename, "original")
     output_path = os.path.join(pokemon_folder, new_filename)
@@ -102,13 +140,16 @@ def save_original_image(shiny_file, pokemon_folder):
     return output_path, new_filename
 
 
-
 # =============================================================================
 # 팔레트 분석 및 기준 선택
+# KEEP: 이 섹션의 로직은 매우 정교하므로 수정하지 말고 그대로 유지
 # =============================================================================
 
 def extract_palette_from_original_image(image_path, max_colors=16):
-    """원본 이미지에서 빠른 팔레트 추출 (전처리 없이)"""
+    """원본 이미지에서 빠른 팔레트 추출 (전처리 없이)
+
+    KEEP: 최적 기준 이미지 선택을 위한 핵심 로직
+    """
     print(f"    빠른 팔레트 분석: {os.path.basename(image_path)}")
 
     img = Image.open(image_path)
@@ -143,7 +184,10 @@ def extract_palette_from_original_image(image_path, max_colors=16):
 
 
 def find_optimal_reference(image_files):
-    """원본 이미지들에서 빠른 팔레트 분석으로 최적 기준 선택"""
+    """원본 이미지들에서 빠른 팔레트 분석으로 최적 기준 선택
+
+    KEEP: 이 알고리즘은 매우 정교함. 팔레트 호환성 기반 최적화
+    """
     print("  원본 이미지들의 빠른 팔레트 분석으로 기준 이미지 선택 중...")
 
     image_palettes = {}
@@ -193,10 +237,14 @@ def find_optimal_reference(image_files):
 
 # =============================================================================
 # 기준 이미지 전처리
+# KEEP: indexed_bitmap_handler와 연동된 핵심 전처리 로직
 # =============================================================================
 
 def extract_palette_from_processed_image(image: Image.Image, max_colors=16):
-    """전처리된 이미지에서 팔레트 추출"""
+    """전처리된 이미지에서 팔레트 추출
+
+    KEEP: 전처리 후 팔레트 정보 추출용
+    """
     if image.mode != 'P':
         raise ValueError("이미지가 팔레트 모드가 아닙니다")
 
@@ -223,7 +271,10 @@ def extract_palette_from_processed_image(image: Image.Image, max_colors=16):
 
 
 def preprocess_reference_only(reference_path, is_diamond_pearl=False):
-    """선택된 기준 이미지만 포켓몬 포맷으로 전처리"""
+    """선택된 기준 이미지만 포켓몬 포맷으로 전처리
+
+    KEEP: indexed_bitmap_handler의 전처리 파이프라인 활용
+    """
     print(f"  기준 이미지를 포켓몬 포맷으로 전처리 중: {os.path.basename(reference_path)}")
 
     try:
@@ -248,10 +299,15 @@ def preprocess_reference_only(reference_path, is_diamond_pearl=False):
 
 # =============================================================================
 # 개선된 Shiny 이미지 처리 (전처리 포함)
+# KEEP: C# AlternatePalette 로직을 정확히 재현한 핵심 기능
 # =============================================================================
 
 def extract_color_mapping_between_processed_images(reference_processed, shiny_processed):
-    """두 전처리된 이미지 간의 색상 매핑 추출 (C# AlternatePalette 로직)"""
+    """두 전처리된 이미지 간의 색상 매핑 추출 (C# AlternatePalette 로직)
+
+    KEEP: 이 함수는 C# 원본 코드를 정확히 재현한 핵심 로직
+    절대 수정하지 말 것!
+    """
     print(f"      전처리된 이미지 간 색상 매핑 추출")
 
     try:
@@ -320,7 +376,10 @@ def extract_color_mapping_between_processed_images(reference_processed, shiny_pr
 
 
 def apply_color_mapping_to_processed_image(processed_reference, color_mapping):
-    """전처리된 기준 이미지에 색상 매핑을 적용하여 Shiny 팔레트 생성"""
+    """전처리된 기준 이미지에 색상 매핑을 적용하여 Shiny 팔레트 생성
+
+    KEEP: 색상 매핑을 팔레트에 적용하는 핵심 로직
+    """
     print(f"      전처리된 이미지에 색상 매핑 적용 중...")
 
     if processed_reference.mode != 'P':
@@ -387,8 +446,12 @@ def apply_color_mapping_to_processed_image(processed_reference, color_mapping):
 
 
 def process_shiny_files_with_preprocessing(shiny_files_for_group, reference_path, processed_reference,
-                                          pokemon_folder, is_diamond_pearl=False):
-    """Shiny 파일들을 3단계로 처리하고 모두 저장"""
+                                           pokemon_folder, is_diamond_pearl=False):
+    """Shiny 파일들을 3단계로 처리하고 모두 저장
+
+    KEEP: 3단계 처리 로직 (원본→전처리→매핑) 유지
+    TODO: 출력을 NARC 형식으로 변경시 중간 파일 저장 부분만 수정
+    """
     if not shiny_files_for_group:
         return {}
 
@@ -428,7 +491,7 @@ def process_shiny_files_with_preprocessing(shiny_files_for_group, reference_path
                 # 매핑 실패 시에는 전처리된 이미지를 최종 버전으로도 저장
                 final_filename = generate_pokemon_filename(shiny_filename)
                 final_output_path = os.path.join(pokemon_folder, final_filename)
-                save_preprocessed_sprite(shiny_processed, final_output_path, "최종 버전 (매핑 실패)")
+                save_preprocessed_sprite(shiny_processed, final_output_path)
                 processed_shinies[final_filename] = shiny_processed
 
                 print(f"      📁 저장된 파일들:")
@@ -445,7 +508,7 @@ def process_shiny_files_with_preprocessing(shiny_files_for_group, reference_path
                 # 최종 매핑 적용 버전 저장
                 final_filename = generate_pokemon_filename(shiny_filename)
                 final_output_path = os.path.join(pokemon_folder, final_filename)
-                save_preprocessed_sprite(final_shiny, final_output_path, "최종 버전 (매핑 적용)")
+                save_preprocessed_sprite(final_shiny, final_output_path)
                 processed_shinies[final_filename] = final_shiny
 
                 print(f"      📁 저장된 파일들:")
@@ -458,7 +521,7 @@ def process_shiny_files_with_preprocessing(shiny_files_for_group, reference_path
                 # 매핑 적용 실패 시 전처리된 이미지를 최종 버전으로 저장
                 final_filename = generate_pokemon_filename(shiny_filename)
                 final_output_path = os.path.join(pokemon_folder, final_filename)
-                save_preprocessed_sprite(shiny_processed, final_output_path, "최종 버전 (매핑 실패)")
+                save_preprocessed_sprite(shiny_processed, final_output_path)
                 processed_shinies[final_filename] = shiny_processed
 
                 print(f"      📁 저장된 파일들:")
@@ -472,12 +535,17 @@ def process_shiny_files_with_preprocessing(shiny_files_for_group, reference_path
 
     return processed_shinies
 
+
 # =============================================================================
 # 일반 이미지 팔레트 매칭
+# KEEP: 팔레트 통일 핵심 로직
 # =============================================================================
 
 def palette_match_to_reference(reference_palette, target_image_path, is_diamond_pearl=False):
-    """대상 이미지를 기준 팔레트에 맞춰 변환"""
+    """대상 이미지를 기준 팔레트에 맞춰 변환
+
+    KEEP: 팔레트 매칭 알고리즘은 정교하므로 유지
+    """
     print(f"      팔레트 매칭: {os.path.basename(target_image_path)}")
 
     # 1. 대상 이미지도 포켓몬 포맷으로 전처리
@@ -549,7 +617,10 @@ def palette_match_to_reference(reference_palette, target_image_path, is_diamond_
 
 
 def match_others_to_reference(reference_palette, other_image_files, reference_path, is_diamond_pearl=False):
-    """다른 이미지들을 전처리된 기준 팔레트에 맞춤"""
+    """다른 이미지들을 전처리된 기준 팔레트에 맞춤
+
+    KEEP: 그룹 내 모든 이미지의 팔레트 통일 로직
+    """
     print(f"  다른 이미지들을 기준 팔레트에 맞춰 변환 중...")
 
     processed_others = {}
@@ -579,7 +650,10 @@ def match_others_to_reference(reference_palette, other_image_files, reference_pa
 
 
 def find_matching_normal_for_shiny(shiny_file, processed_images):
-    """특정 Shiny 이미지에 대응하는 일반 이미지 찾기"""
+    """특정 Shiny 이미지에 대응하는 일반 이미지 찾기
+
+    KEEP: Shiny-Normal 매칭 로직
+    """
     shiny_filename = os.path.basename(shiny_file)
     shiny_gender, shiny_direction, _ = parse_sprite_info(shiny_filename)
 
@@ -595,7 +669,11 @@ def find_matching_normal_for_shiny(shiny_file, processed_images):
 
 
 def filter_matching_shiny_files(shiny_files_for_group, reference_path):
-    """기준 이미지와 같은 성별의 Shiny 파일들만 필터링"""
+    """기준 이미지와 같은 성별의 Shiny 파일들만 필터링
+
+    KEEP: 성별별 매칭 로직 (현재는 파일명 기반)
+    TODO: 폴더 구조 변경시 경로 기반으로 수정
+    """
     reference_filename = os.path.basename(reference_path)
     ref_gender, ref_direction, _ = parse_sprite_info(reference_filename)
 
@@ -616,7 +694,11 @@ def filter_matching_shiny_files(shiny_files_for_group, reference_path):
 
 
 def parse_sprite_info(filename):
-    """파일명에서 성별과 방향 정보 추출"""
+    """파일명에서 성별과 방향 정보 추출
+
+    현재: 001MFront.png → ('male', 'front', False)
+    TODO: 폴더 구조로 변경시 경로 기반 파싱으로 수정
+    """
     is_female = 'FBack' in filename or 'FFront' in filename or 'FShiny' in filename
     is_back = 'Back' in filename
     is_shiny = 'Shiny' in filename
@@ -628,12 +710,14 @@ def parse_sprite_info(filename):
 
 
 def process_single_shiny_file(shiny_file, matching_normal_image, pokemon_folder, is_diamond_pearl):
-    """단일 Shiny 파일을 3단계로 처리"""
+    """단일 Shiny 파일을 3단계로 처리
+
+    KEEP: 개별 Shiny 처리 로직
+    """
     shiny_filename = os.path.basename(shiny_file)
     print(f"    처리 중: {shiny_filename}")
 
     try:
-
         # 2단계: 전처리
         shiny_processed = preprocess_reference_image_for_pokemon(shiny_file, is_diamond_pearl)
         preprocessed_filename = generate_pokemon_filename(shiny_filename, "preprocessed")
@@ -658,12 +742,18 @@ def process_single_shiny_file(shiny_file, matching_normal_image, pokemon_folder,
 
 # =============================================================================
 # 그룹 처리 메인 함수
+# TODO: 이 섹션을 README 규격에 맞게 수정 필요
 # =============================================================================
 
 def process_group(group_number, group_files, shiny_files_for_group,
                   output_folder, is_diamond_pearl=False):
-    """그룹 처리"""
+    """그룹 처리
 
+    현재: 파일명 숫자 기반 그룹 처리
+    TODO: 성별별 도감번호 기반으로 변경
+    - input/M/001/ + input/F/001/ → 하나의 포켓몬으로 처리
+    - 출력을 NARC 인덱스로 매핑
+    """
     print(f"\n{'=' * 70}")
     print(f"그룹 {group_number} 처리 중 ({len(group_files)}개 파일)")
     if shiny_files_for_group:
@@ -671,6 +761,7 @@ def process_group(group_number, group_files, shiny_files_for_group,
     print(f"{'=' * 70}")
 
     # 포켓몬 폴더 생성
+    # TODO: NARC 직접 출력으로 변경시 이 부분 제거
     pokemon_folder = create_pokemon_folder(output_folder, group_number)
 
     # 단일 파일 처리
@@ -682,7 +773,10 @@ def process_group(group_number, group_files, shiny_files_for_group,
 
 
 def process_single_file(file_path, shiny_files_for_group, pokemon_folder, is_diamond_pearl):
-    """단일 파일 처리"""
+    """단일 파일 처리
+
+    KEEP: 단일 파일 처리 로직
+    """
     print("  단일 파일 처리")
 
     filename = os.path.basename(file_path)
@@ -702,7 +796,10 @@ def process_single_file(file_path, shiny_files_for_group, pokemon_folder, is_dia
 
 
 def process_multiple_files(group_number, group_files, shiny_files_for_group, pokemon_folder, is_diamond_pearl):
-    """멀티 파일 처리"""
+    """멀티 파일 처리
+
+    KEEP: 핵심 팔레트 통일 파이프라인
+    """
     print("  멀티 파일 처리")
 
     # 1단계: 기준 이미지 선택
@@ -773,7 +870,10 @@ def process_multiple_files(group_number, group_files, shiny_files_for_group, pok
 
 
 def perform_verification(group_number, processed_images, processed_shinies, reference_palette):
-    """팔레트 통일 및 포맷 호환성 검증"""
+    """팔레트 통일 및 포맷 호환성 검증
+
+    KEEP: 검증 로직은 품질 관리에 중요
+    """
     print(f"\n  📋 검증 단계")
 
     # 팔레트 통일 검증
@@ -825,16 +925,29 @@ def perform_verification(group_number, processed_images, processed_shinies, refe
 
 # =============================================================================
 # 메인 함수
+# TODO: 전체 워크플로우를 README 규격에 맞게 수정 필요
 # =============================================================================
 
 def main():
-    """메인 실행 함수"""
+    """메인 실행 함수
+
+    현재 흐름:
+    1. input/ 폴더에서 파일명 기반 그룹화
+    2. 각 그룹별로 팔레트 통일 처리
+    3. output/ 폴더에 PNG 파일들 저장
+
+    TODO: README 규격 구현
+    1. input/M/XXX/, input/F/XXX/ 폴더 구조 스캔
+    2. 성별별 처리 후 NARC 인덱스 매핑
+    3. pokemon_sprite_converter 호출하여 NARC 생성
+    """
     print("=== 개선된 포켓몬 포맷 전처리 + 팔레트 구조 통일 도구 ===")
     print("Shiny 이미지도 완전 전처리 + 기준 선택 → 전처리 → 매핑 → 통일\n")
 
     # 설정
-    input_folder = "./input"
-    output_folder = "./output"
+    # TODO: README 규격에 맞게 수정
+    input_folder = "./input"  # TODO: input/M/, input/F/ 구조로 변경
+    output_folder = "./output"  # TODO: NARC 직접 출력으로 변경
     is_diamond_pearl = False  # True로 설정하면 DP 포맷 사용
 
     if not os.path.exists(output_folder):
@@ -845,6 +958,7 @@ def main():
     print(f"포맷: {'Diamond/Pearl' if is_diamond_pearl else 'Platinum'}")
 
     # 이미지 파일 찾기
+    # TODO: 폴더 구조 스캔으로 변경
     image_extensions = ['.png', '.jpg', '.jpeg', '.bmp', '.gif']
     image_files = []
 
@@ -859,6 +973,7 @@ def main():
     print(f"\n{len(image_files)}개의 이미지를 발견했습니다.")
 
     # 파일들을 숫자별로 그룹화
+    # TODO: scan_gender_dex_folders()로 대체
     groups, shiny_files = group_files_by_number(image_files)
 
     if not groups and not shiny_files:
@@ -868,6 +983,7 @@ def main():
     print(f"\n{len(groups)}개의 일반 그룹과 {len(shiny_files)}개의 Shiny 그룹으로 분류되었습니다.")
 
     # 각 그룹별로 개선된 처리
+    # KEEP: 팔레트 통일 로직은 그대로 유지
     total_processed = 0
     successful_groups = 0
     all_groups = set(groups.keys()) | set(shiny_files.keys())
@@ -886,6 +1002,9 @@ def main():
         except Exception as e:
             print(f"\n❌ 그룹 {group_num} 처리 실패: {e}")
 
+    # TODO: pokemon_sprite_converter 호출하여 NARC 생성
+    # convert_pngs_to_narc(output_folder, "new_pl_pokegra.narc", "pl_pokegra.narc")
+
     print(f"\n{'=' * 80}")
     print("🎯 최종 결과")
     print(f"{'=' * 80}")
@@ -893,10 +1012,10 @@ def main():
     print(f"총 처리된 이미지: {total_processed}개")
     print(f"결과 저장 위치: {output_folder}")
 
-    print(f"\n🚀 개선된 처리 순서:")
+    print(f"\n🚀 현재 처리 순서:")
     print("1. 기준 이미지 선택 (빠른 팔레트 분석)")
     print("2. 기준 이미지 전처리 (포켓몬 포맷)")
-    print("3. Shiny 이미지 전처리 (포켓몬 포맷) ← 새로 추가!")
+    print("3. Shiny 이미지 전처리 (포켓몬 포맷)")
     print("4. 전처리된 이미지 간 색상 매핑 추출")
     print("5. 매핑 적용하여 Shiny 이미지 생성")
     print("6. 다른 이미지들 팔레트 매칭")
@@ -907,17 +1026,32 @@ def main():
     print("- 팔레트 16색 제한 ✓")
     print("- 크기 조정 (64x64→80x80→160x80) ✓")
     print("- 팔레트 인덱스 구조 통일 ✓")
-    print("- Shiny 이미지도 완전 전처리 ✓ ← 개선 사항!")
+    print("- Shiny 이미지도 완전 전처리 ✓")
     print("- 포켓몬 NARC 완전 호환 ✓")
 
-    print(f"\n✨ 주요 개선 사항:")
-    print("- Shiny 이미지도 일반 이미지와 동일한 전처리 과정 거침")
-    print("- 전처리 후 색상 매핑으로 더 정확한 Shiny 팔레트 생성")
-    print("- 모든 이미지가 동일한 포맷 표준 준수")
-    print("- C# 원본 코드의 AlternatePalette 로직 정확히 구현")
+    print(f"\n⚠️  TODO: README 규격 구현 필요")
+    print("- input/M/XXX/, input/F/XXX/ 폴더 구조 지원")
+    print("- NARC 직접 출력 기능")
+    print("- pokemon_sprite_converter 자동 연동")
 
     print(f"\n완료! 모든 결과물이 '{output_folder}' 폴더에 저장되었습니다.")
-    print("이제 pokemon_sprite_converter.py로 안전하게 NARC 파일을 생성할 수 있습니다.")
+    print("현재는 PNG 파일 형태이며, 추후 NARC 변환이 필요합니다.")
+
+
+# TODO: 새로운 README 규격 메인 함수 구현
+def main_readme_spec():
+    """README 규격에 맞는 새로운 메인 함수 (미구현)
+
+    계획된 흐름:
+    1. input/M/, input/F/ 폴더 구조 스캔
+    2. 도감번호별로 성별 데이터 수집
+    3. 팔레트 통일 처리 (현재 로직 활용)
+    4. NARC 인덱스로 매핑
+    5. pokemon_sprite_converter 호출
+    6. 원본 pl_pokegra.narc 수정
+    """
+    # TODO: 구현 필요
+    pass
 
 
 if __name__ == "__main__":

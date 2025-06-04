@@ -505,7 +505,7 @@ if __name__ == "__main__":
     # converter.pokemon_to_png(sprite_data, palette_data, "converted_pikachu.png")
 
     # NARC 파일 전체 변환
-    convert_narc_to_pngs("pl_pokegra.narc", "extracted_sprites/")
-    # convert_pngs_to_narc("png_editor/output", "new_pl_pokegra.narc", "pl_pokegra.narc")
+    # convert_narc_to_pngs("pl_pokegra.narc", "extracted_sprites/")
+    convert_pngs_to_narc("output/", "new_pl_pokegra.narc", "pl_pokegra.narc")
 
     pass
